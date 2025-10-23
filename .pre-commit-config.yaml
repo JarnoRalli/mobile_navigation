@@ -1,0 +1,35 @@
+repos:
+  # Clear Jupyter Notebook output before commit
+  - repo: local
+    hooks:
+      - id: jupyter-nb-clear-output
+        name: jupyter-nb-clear-output
+        files: \.ipynb$
+        stages: [pre-commit]
+        language: python
+        entry: jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace
+        additional_dependencies:
+          - jupyter
+          - platformdirs
+
+  # Python formatter
+  - repo: https://github.com/ambv/black
+    rev: 25.1.0
+    hooks:
+      - id: black
+        language_version: python3
+        files: \.py$
+
+  # Python linter
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.2
+    hooks:
+      - id: flake8
+        files: \.py$
+
+  # General pre-commit hooks (e.g., trailing whitespace removal)
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+
