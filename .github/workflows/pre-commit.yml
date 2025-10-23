@@ -17,9 +17,8 @@ jobs:
         python-version: '3.12'
     - name: install pre-commit
       run: |
-        npm install
         pip install --upgrade pip
-        pip install pre-commit jupyter djhtml
+        pip install pre-commit jupyter
         pre-commit install
     - name: run pre-commit hooks
       run: |
