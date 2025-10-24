@@ -21,15 +21,26 @@ class GPSIMUNode(Node):
     def __init__(self) -> None:
         super().__init__("gps_imu_node")
 
-        # Declare and read debug parameter
+        # Declare parameters
         self.declare_parameter("debug", False)
-        self.debug: bool = self.get_parameter("debug").value
+        self.declare_parameter("host", None)
+        self.declare_parameter("port", None)
+        self.declare_parameter("gps_topic", "/gps")
+        self.declare_parameter("imu_topic", "/imu")
 
-        self.gps_pub = self.create_publisher(NavSatFix, "/gps", 10)
-        self.imu_pub = self.create_publisher(Imu, "/imu", 10)
+        # Get parameters
+        self.debug: bool = self.get_parameter("debug").value
+        self.host: str = self.get_parameter("host").value
+        self.port: int = self.get_parameter("port").value
+        self.gps_topic: str = self.get_parameter("gps_topic").value
+        self.imu_topic: str = self.get_parameter("imu_topic").value
+
+        # Create publishers
+        self.gps_pub = self.create_publisher(NavSatFix, self.gps_topic, 10)
+        self.imu_pub = self.create_publisher(Imu, self.imu_topic, 10)
 
         # Create the data source via factory (example: SensorLog)
-        self.source = SourceFactory.create_source("sensorlog", ("192.168.1.172", 60570))
+        self.source = SourceFactory.create_source("sensorlog", (self.host, self.port))
 
         # Start a background thread that publishes as fast as data arrives
         self._thread = threading.Thread(target=self._publish_loop, daemon=True)
