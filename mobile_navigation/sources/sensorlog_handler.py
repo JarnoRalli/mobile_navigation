@@ -21,6 +21,13 @@ class SensorLogHandler:
     """
 
     def __init__(self, host: str, port: int) -> None:
+
+        if not isinstance(host, str):
+            raise ValueError(f"'host' must be of type str, not {type(host).__name__}")
+
+        if not isinstance(port, int):
+            raise ValueError(f"'port' must be of type int, not {type(port).__name__}")
+
         self.host: str = host
         self.port: int = port
         self.sock: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

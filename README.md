@@ -41,6 +41,12 @@ rosdep install --from-paths src --ignore-src -r -y
 3. Build the workspace
 
 ```bash
+colcon build --symlink-install
+```
+
+4. Source the workspace
+
+```bash
 source install/setup.bash
 ```
 
