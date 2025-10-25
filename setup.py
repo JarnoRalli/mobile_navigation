@@ -1,4 +1,6 @@
 from setuptools import find_packages, setup
+from glob import glob
+import os
 
 package_name = "mobile_navigation"
 
@@ -9,8 +11,11 @@ setup(
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml"]),
-        ("share/" + package_name + "/launch", ["launch/gps_imu.launch.py"]),
-        ("share/" + package_name + "/config", ["config/default_config.yaml"]),
+        (
+            "share/" + package_name + "/launch",
+            glob(os.path.join("launch", "*.launch.py")),
+        ),
+        ("share/" + package_name + "/config", glob(os.path.join("config", "*.yaml"))),
     ],
     install_requires=["setuptools", "pydantic>=2.0", "rclpy", "sensor-msgs"],
     zip_safe=True,

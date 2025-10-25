@@ -2,6 +2,6 @@ gps_imu_node:
   ros__parameters:
     host: 192.168.1.172
     port: 60570
-    gps_topic: /gps
-    imu_topic: /imu
+    gps_topic: /mobile_navigation/gps
+    imu_topic: /mobile_navigation/imu
     debug: True
