@@ -3,6 +3,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix, Imu
 from mobile_navigation.sources.factory import SourceFactory
+from rclpy.parameter import Parameter
 
 
 class GPSIMUNode(Node):
@@ -23,17 +24,25 @@ class GPSIMUNode(Node):
 
         # Declare parameters
         self.declare_parameter("debug", False)
-        self.declare_parameter("host", None)
-        self.declare_parameter("port", None)
-        self.declare_parameter("gps_topic", "/gps")
-        self.declare_parameter("imu_topic", "/imu")
+        self.declare_parameter("host", Parameter.Type.STRING)
+        self.declare_parameter("port", Parameter.Type.INTEGER)
+        self.declare_parameter("gps_topic", "/mobile_navigation/gps")
+        self.declare_parameter("imu_topic", "/mobile_navigation/imu")
 
         # Get parameters
-        self.debug: bool = self.get_parameter("debug").value
-        self.host: str = self.get_parameter("host").value
-        self.port: int = self.get_parameter("port").value
-        self.gps_topic: str = self.get_parameter("gps_topic").value
-        self.imu_topic: str = self.get_parameter("imu_topic").value
+        self.debug: bool = self.get_parameter("debug").get_parameter_value().bool_value
+        self.host: str = self.get_parameter("host").get_parameter_value().string_value
+        self.port: int = self.get_parameter("port").get_parameter_value().integer_value
+        self.gps_topic: str = (
+            self.get_parameter("gps_topic").get_parameter_value().string_value
+        )
+        self.imu_topic: str = (
+            self.get_parameter("imu_topic").get_parameter_value().string_value
+        )
+
+        # Validate
+        if not self.host or not self.port:
+            raise RuntimeError("You must provide valid 'host' and 'port' parameters")
 
         # Create publishers
         self.gps_pub = self.create_publisher(NavSatFix, self.gps_topic, 10)
@@ -47,17 +56,50 @@ class GPSIMUNode(Node):
         self._thread.start()
 
     def _publish_loop(self) -> None:
-        """Continuously reads data from source and publishes ROS messages."""
-        while rclpy.ok():
-            gps_msg, imu_msg = self.source.get_next()
-            if gps_msg and imu_msg:
-                self.gps_pub.publish(gps_msg)
-                self.imu_pub.publish(imu_msg)
+        """
+        Continuously reads data from the source and publishes ROS messages.
 
+        This loop blocks until at least one valid message is received from the source,
+        then publishes all GNSS and IMU messages extracted in the current batch.
+        Useful for streaming SensorLog data over TCP and feeding ROS topics.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        - The function will block on `self.source.get_next()` until at least one
+        valid message is available.
+        - Publishes each GNSS message to `self.gps_pub` and each IMU message to
+        `self.imu_pub`.
+        - If `self.debug` is True, prints human-readable information about each
+        message to the ROS logger.
+        - Designed to run inside a ROS 2 node while `rclpy.ok()` is True.
+        """
+        while rclpy.ok():
+            gps_msgs, imu_msgs = self.source.get_next()  # now returns lists
+
+            for gps_msg in gps_msgs:
+                self.gps_pub.publish(gps_msg)
                 if self.debug:
+                    stamp = gps_msg.header.stamp
+                    timestamp_sec = stamp.sec + stamp.nanosec * 1e-9
                     self.get_logger().info(
-                        f"Received GPS: lat={gps_msg.latitude:.6f}, lon={gps_msg.longitude:.6f}, alt={gps_msg.altitude:.2f} | "
-                        f"IMU: ax={imu_msg.linear_acceleration.x:.2f}, ay={imu_msg.linear_acceleration.y:.2f}, az={imu_msg.linear_acceleration.z:.2f}"
+                        f"GPS: lat={gps_msg.latitude:.6f}, "
+                        f"lon={gps_msg.longitude:.6f}, alt={gps_msg.altitude:.2f}, timestamp={timestamp_sec:.6f}"
+                    )
+
+            for imu_msg in imu_msgs:
+                self.imu_pub.publish(imu_msg)
+                if self.debug:
+                    stamp = imu_msg.header.stamp
+                    timestamp_sec = stamp.sec + stamp.nanosec * 1e-9
+                    self.get_logger().info(
+                        f"IMU: ax={imu_msg.linear_acceleration.x:.2f}, "
+                        f"ay={imu_msg.linear_acceleration.y:.2f}, "
+                        f"az={imu_msg.linear_acceleration.z:.2f}, "
+                        f"timestamp={timestamp_sec:.6f}"
                     )
 
 

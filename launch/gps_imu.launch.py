@@ -17,7 +17,7 @@ def generate_launch_description():
                 package="mobile_navigation",
                 executable="gps_imu_node",
                 name="gps_imu_node",
-                parameters=[config_file],  # load YAML as parameters
+                parameters=[config_file],
             )
         ]
     )
