@@ -17,7 +17,15 @@ setup(
         ),
         ("share/" + package_name + "/config", glob(os.path.join("config", "*.yaml"))),
     ],
-    install_requires=["setuptools", "pydantic>=2.0", "rclpy", "sensor-msgs"],
+    install_requires=[
+        "setuptools",
+        "pydantic>=2.0",
+        "rclpy",
+        "sensor-msgs",
+        "flask",
+        "flask-socketio",
+        "scipy",
+    ],
     zip_safe=True,
     maintainer="Jarno Ralli",
     maintainer_email="jarno@ralli.fi",
@@ -31,6 +39,7 @@ setup(
     entry_points={
         "console_scripts": [
             "gps_imu_node = mobile_navigation.nodes.gps_imu_node:main",
+            "gps_visualizer = mobile_navigation.nodes.gps_visualizer:main",
         ],
     },
 )

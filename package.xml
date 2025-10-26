@@ -20,6 +20,8 @@
   <!-- Python dependency -->
   <exec_depend>python3-pydantic</exec_depend>
   <exec_depend>python3-scipy</exec_depend>
+  <exec_depend>python3-flask</exec_depend>
+  <exec_depend>python3-flask-socketio</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>
