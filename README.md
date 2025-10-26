@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
 
-`mobile_navigation` is a ROS 2 package for streaming **GPS and IMU data from mobile devices** (e.g., iPhone, Android). It publishes ROS 2 messages (`NavSatFix` and `Imu`) that can be directly used in localization, navigation, sensor fusion, or other robotics applications. While [SensorLog](https://sensorlog.berndthomas.net/) is one supported app, the package is designed to work with multiple sources that provide GPS/IMU data.
+`mobile_navigation` is a ROS 2 package for streaming **GPS and IMU data from mobile devices** (e.g., iPhone, Android). It publishes ROS 2 messages (`NavSatFix` and `Imu`) that can be directly used in localization, navigation, sensor fusion, or other robotics applications. While [SensorLog](https://sensorlog.berndthomas.net/) is one supported apps, the package is designed to work with multiple sources that provide GPS/IMU data.
 
 ---
 
@@ -55,6 +55,8 @@ source install/setup.bash
 
 ### Example: SensorLog on iPhone
 
+For more information regarding the coordinate system frames used in iPhone/SensorLog, take a look at the [documentation](./documentation/iPhone/README.md).
+
 1. Install **SensorLog** from the App Store.
 2. Configure streaming settings:
 
@@ -63,9 +65,11 @@ source install/setup.bash
    * `Log to stream`: `Enabled`
    * `Unbiased: user acceleration, etc.`: `Enabled`
    * `Coordinates, speed, altitude, course`: `Enabled`
+   * `Sensor Configuration`
+      * `auto navi`
+      * `best for navi`
+      * `X true N` (related to [CMAttitudeReferenceFrame](https://developer.apple.com/documentation/coremotion/cmattitudereferenceframe))
 3. Start recording or streaming data to the specified host and port (TCP JSON stream).
-
-For other apps or devices, ensure that data is accessible in a format that `mobile_navigation` can consume (e.g., through direct device APIs, file logs, or other streaming methods).
 
 ---
 
@@ -102,7 +106,10 @@ ros2 launch mobile_navigation gps_imu.launch.py
 In a separate terminal, record the topics:
 
 ```bash
-ros2 bag record --topics /mobile_navigation/gps /mobile_navigation/imu -o mobile_navigation_bag
+ros2 bag record --topics /mobile_navigation/gps \
+/mobile_navigation/imu \
+/mobile_navigation/twist \
+-o mobile_navigation_bag
 ```
 
 ### Playback
@@ -118,6 +125,7 @@ To view messages while replaying:
 ```bash
 ros2 topic echo /mobile_navigation/gps &
 ros2 topic echo /mobile_navigation/imu &
+ros2 topic echo /mobile_navigation/twist &
 ros2 bag play mobile_navigation_bag
 ```
 
