@@ -2,6 +2,7 @@ import threading
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix, Imu
+from geometry_msgs.msg import TwistStamped
 from mobile_navigation.sources.factory import SourceFactory
 from rclpy.parameter import Parameter
 
@@ -13,10 +14,12 @@ class GPSIMUNode(Node):
 
     Publishes
     --------
-    /gps : sensor_msgs/NavSatFix
+    /mobile_navigation/gps : sensor_msgs/NavSatFix
         GPS coordinates in WGS84 (latitude, longitude, altitude).
-    /imu : sensor_msgs/Imu
+    /mobile_navigation/imu : sensor_msgs/Imu
         IMU orientation (quaternion) and linear/angular acceleration.
+    /mobile_navigation/twist : geometry_msgs.msg
+        Linear velocity and angular rotation
     """
 
     def __init__(self) -> None:
@@ -28,6 +31,7 @@ class GPSIMUNode(Node):
         self.declare_parameter("port", Parameter.Type.INTEGER)
         self.declare_parameter("gps_topic", "/mobile_navigation/gps")
         self.declare_parameter("imu_topic", "/mobile_navigation/imu")
+        self.declare_parameter("twist_topic", "/mobile_navigation/twist")
 
         # Get parameters
         self.debug: bool = self.get_parameter("debug").get_parameter_value().bool_value
@@ -39,6 +43,9 @@ class GPSIMUNode(Node):
         self.imu_topic: str = (
             self.get_parameter("imu_topic").get_parameter_value().string_value
         )
+        self.twist_topic: str = (
+            self.get_parameter("twist_topic").get_parameter_value().string_value
+        )
 
         # Validate
         if not self.host or not self.port:
@@ -47,6 +54,7 @@ class GPSIMUNode(Node):
         # Create publishers
         self.gps_pub = self.create_publisher(NavSatFix, self.gps_topic, 10)
         self.imu_pub = self.create_publisher(Imu, self.imu_topic, 10)
+        self.twist_pub = self.create_publisher(TwistStamped, self.twist_topic, 10)
 
         # Create the data source via factory (example: SensorLog)
         self.source = SourceFactory.create_source("sensorlog", (self.host, self.port))
@@ -78,7 +86,7 @@ class GPSIMUNode(Node):
         - Designed to run inside a ROS 2 node while `rclpy.ok()` is True.
         """
         while rclpy.ok():
-            gps_msgs, imu_msgs = self.source.get_next()  # now returns lists
+            gps_msgs, imu_msgs, twist_msgs = self.source.get_next()
 
             for gps_msg in gps_msgs:
                 self.gps_pub.publish(gps_msg)
@@ -99,6 +107,18 @@ class GPSIMUNode(Node):
                         f"IMU: ax={imu_msg.linear_acceleration.x:.2f}, "
                         f"ay={imu_msg.linear_acceleration.y:.2f}, "
                         f"az={imu_msg.linear_acceleration.z:.2f}, "
+                        f"timestamp={timestamp_sec:.6f}"
+                    )
+
+            for twist_msg in twist_msgs:
+                self.twist_pub.publish(twist_msg)
+                if self.debug:
+                    stamp = twist_msg.header.stamp
+                    timestamp_sec = stamp.sec + stamp.nanosec * 1e-9
+                    self.get_logger().info(
+                        f"TWIST: x={twist_msg.twist.linear.x:.2f}, "
+                        f"y={twist_msg.twist.linear.y:.2f}, "
+                        f"z={twist_msg.twist.linear.z:.2f}, "
                         f"timestamp={timestamp_sec:.6f}"
                     )
 

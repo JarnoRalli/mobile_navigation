@@ -3,7 +3,8 @@ import json
 import re
 from typing import List, Tuple
 from sensor_msgs.msg import NavSatFix, Imu
-from mobile_navigation.interfaces.sensorlog_parser import GNSS, IMU
+from geometry_msgs.msg import TwistStamped
+from mobile_navigation.interfaces.sensorlog_parser import GNSS, IMU, TWIST
 
 
 class SensorLogHandler:
@@ -32,7 +33,7 @@ class SensorLogHandler:
         self.sock.connect((self.host, self.port))
         self.buffer: str = ""
 
-    def get_next(self) -> Tuple[List[NavSatFix], List[Imu]]:
+    def get_next(self) -> Tuple[List[NavSatFix], List[Imu], List[TwistStamped]]:
         """
         Reads from a TCP socket, parses SensorLog JSON, and returns ROS messages.
 
@@ -46,6 +47,8 @@ class SensorLogHandler:
             A list of GNSS messages extracted from the current buffer.
         imu_msg_list : List[Imu]
             A list of IMU messages extracted from the current buffer.
+        twist_msg_list: List[TwistStamped]
+            A list of Twist messages extracted from the current buffer.
 
         Notes
         -----
@@ -65,6 +68,7 @@ class SensorLogHandler:
 
             gps_msg_list: List[NavSatFix] = []
             imu_msg_list: List[Imu] = []
+            twist_msg_list: List[TwistStamped] = []
 
             json_objects = list(re.finditer(r"\{.*?\}", self.buffer, re.DOTALL))
             for match in json_objects:
@@ -76,10 +80,12 @@ class SensorLogHandler:
                     gps_msg_list.append(GNSS(**json_object).to_ros_message())
                 if IMU.is_valid_message(json_object):
                     imu_msg_list.append(IMU(**json_object).to_ros_message())
+                if TWIST.is_valid_message(json_object):
+                    twist_msg_list.append(TWIST(**json_object).to_ros_message())
 
                 # Remove exactly this object from the buffer
                 self.buffer = self.buffer[end:]
 
             # Only return if at least one valid message was found
-            if gps_msg_list or imu_msg_list:
-                return gps_msg_list, imu_msg_list
+            if gps_msg_list or imu_msg_list or twist_msg_list:
+                return gps_msg_list, imu_msg_list, twist_msg_list

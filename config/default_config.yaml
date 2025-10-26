@@ -4,4 +4,5 @@ gps_imu_node:
     port: 60570
     gps_topic: /mobile_navigation/gps
     imu_topic: /mobile_navigation/imu
+    twist_topic: /mobile_navigation/twist
     debug: True
