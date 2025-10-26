@@ -11,9 +11,9 @@
 * Streams **GNSS (GPS) and IMU** data from mobile devices.
 * Supports multiple applications or devices through a **modular source interface**.
 * Parses incoming data and publishes ROS 2 topics:
-
   * `/mobile_navigation/gps` → [`sensor_msgs/NavSatFix`](https://docs.ros2.org/latest/api/sensor_msgs/msg/NavSatFix.html)
   * `/mobile_navigation/imu` → [`sensor_msgs/Imu`](https://docs.ros2.org/latest/api/sensor_msgs/msg/Imu.html)
+  * `/mobile_navigation/twist` → [`geometry_msgs/TwistStamped`](https://docs.ros2.org/latest/api/geometry_msgs/msg/TwistStamped.html)
 * Optional **debug mode** for logging raw incoming data.
 * Compatible with **rosbag recording and playback**.
 
@@ -131,12 +131,26 @@ ros2 bag play mobile_navigation_bag
 
 ---
 
+## Map Visualization
+
+You can visualize either live data or data that is played back from a rosbag. First either start `gps_imu_node`, or playback rosbag that contains `/mobile_navigation/gps` topic.
+Then run the following:
+
+```bash
+ros2 run mobile_navigation gps_visualizer
+```
+
+, and then open the URL with a browser that is printed to the terminal.
+
+---
+
 ## ROS Topics
 
-| Topic                    | Type                    | Description                                                       |
-| ------------------------ | ----------------------- | ----------------------------------------------------------------- |
-| `/mobile_navigation/gps` | `sensor_msgs/NavSatFix` | Device-reported GNSS coordinates                                  |
-| `/mobile_navigation/imu` | `sensor_msgs/Imu`       | Device IMU orientation, angular velocity, and linear acceleration |
+| Topic                      | Type                         | Description                                                       |
+| -------------------------- | ---------------------------- | ----------------------------------------------------------------- |
+| `/mobile_navigation/gps`   | `sensor_msgs/NavSatFix`      | Device-reported GNSS coordinates                                  |
+| `/mobile_navigation/imu`   | `sensor_msgs/Imu`            | Device IMU orientation, angular velocity, and linear acceleration |
+| `/mobile_navigation/twist` | `geometry_msgs/TwistStamped` | Vehicle linear and angular velocity, in ENU coordinate frame      |
 
 ---
 
