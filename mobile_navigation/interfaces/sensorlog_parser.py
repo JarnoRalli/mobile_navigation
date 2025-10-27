@@ -35,13 +35,13 @@ class IMU(BaseModel):
         This method performs the following transformations:
         1. Converts the iOS quaternion (xTrueNorthZVertical) to ROS ENU quaternion using `ios_to_enu`.
         2. Swaps the angular velocity axes to match ROS ENU:
-        - iOS X → ENU Y
-        - iOS Y → ENU X
-        - iOS Z → ENU Z
+        - ENU X → iOS Y
+        - ENU Y → -iOS X
+        - ENU Z → iOS Z
         3. Swaps the linear acceleration axes to match ROS ENU:
-        - iOS X → ENU Y
-        - iOS Y → ENU X
-        - iOS Z → ENU Z
+        - ENU X → iOS Y
+        - ENU Y → -iOS X
+        - ENU Z → iOS Z
         4. Sets the message header with the IMU timestamp and frame ID `"imu_link"`.
 
         Coordinate frames:
@@ -84,11 +84,11 @@ class IMU(BaseModel):
         imu_msg.orientation.z = enu[2]
         # We swap the rotation axis since we want the output in ENU coordinate frame
         imu_msg.angular_velocity.x = self.motionRotationRateY
-        imu_msg.angular_velocity.y = self.motionRotationRateX
+        imu_msg.angular_velocity.y = -self.motionRotationRateX
         imu_msg.angular_velocity.z = self.motionRotationRateZ
         # We swap the rotation axis since we want the output in ENU coordinate frame
         imu_msg.linear_acceleration.x = self.motionUserAccelerationY
-        imu_msg.linear_acceleration.y = self.motionUserAccelerationX
+        imu_msg.linear_acceleration.y = -self.motionUserAccelerationX
         imu_msg.linear_acceleration.z = self.motionUserAccelerationZ
         imu_msg.header.stamp = seconds_to_ros_time(self.motionTimestamp_sinceReboot)
         imu_msg.header.frame_id = "imu_link"
@@ -155,9 +155,9 @@ class TWIST(BaseModel):
 
         This method performs the following transformations:
         1. Swaps angular velocity axes from iOS xTrueNorthZVertical to ROS ENU:
-        - iOS X → ENU Y
-        - iOS Y → ENU X
-        - iOS Z → ENU Z
+        - ENU X → iOS Y
+        - ENU Y → -iOS X
+        - ENU Z → iOS Z
         2. Converts heading (from GPS) and speed into linear velocity in ROS ENU:
         - X (East) = speed * sin(heading)
         - Y (North) = speed * cos(heading)
@@ -198,7 +198,7 @@ class TWIST(BaseModel):
         msg.header.frame_id = "map"
         # We swap the rotation axis since we want the output in ENU coordinate frame
         msg.twist.angular.x = self.motionRotationRateY
-        msg.twist.angular.y = self.motionRotationRateX
+        msg.twist.angular.y = -self.motionRotationRateX
         msg.twist.angular.z = self.motionRotationRateZ
 
         if self.locationTrueHeading != -1 and self.locationSpeed != -1:
